@@ -1,0 +1,536 @@
+{% extends "base.html" %}
+
+{% block title %}Course Progress{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1><i class="fas fa-chart-line"></i> Course Progress</h1>
+            <p class="text-muted mb-0">{{ course.title }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('courses.detail', course_id=course.id) }}" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Course
+            </a>
+            <a href="{{ url_for('main.my_courses') }}" class="btn btn-outline-primary">
+                <i class="fas fa-book"></i> My Courses
+            </a>
+        </div>
+    </div>
+
+    <!-- Overall Progress Card -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="mb-3">
+                        <i class="fas fa-trophy text-warning"></i> Overall Progress
+                    </h3>
+                    <div class="progress mb-3" style="height: 35px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated 
+                            {% if enrollment.progress == 100 %}bg-success{% elif enrollment.progress >= 75 %}bg-info{% elif enrollment.progress >= 50 %}bg-primary{% else %}bg-warning{% endif %}"
+                            role="progressbar" style="width: {{ enrollment.progress }}%"
+                            aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100">
+                            <strong style="font-size: 1.1rem;">{{ enrollment.progress }}%</strong>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="text-muted mb-0">
+                            {% set completed = lesson_data|selectattr('completed')|list|length %}
+                            <i class="fas fa-check-circle text-success"></i>
+                            <strong>{{ completed }}</strong> of <strong>{{ lesson_data|length }}</strong> lessons
+                            completed
+                        </p>
+                        <p class="text-muted mb-0">
+                            <i class="far fa-calendar"></i>
+                            Started: {{ enrollment.enrolled_at.strftime('%B %d, %Y') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    {% if enrollment.completed %}
+                    <div class="completion-badge">
+                        <i class="fas fa-trophy fa-5x text-warning mb-3 trophy-icon"></i>
+                        <h4 class="text-success mb-2">
+                            <i class="fas fa-check-circle"></i> Course Completed!
+                        </h4>
+                        <p class="text-muted mb-0">Congratulations on finishing!</p>
+                        <button class="btn btn-success mt-3">
+                            <i class="fas fa-download"></i> Download Certificate
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="learning-badge">
+                        <i class="fas fa-graduation-cap fa-5x text-primary mb-3"></i>
+                        <h5 class="mb-2">Keep Learning!</h5>
+                        <p class="text-muted mb-0">You're doing great!</p>
+                        {% set remaining = lesson_data|rejectattr('completed')|list|length %}
+                        <small class="text-muted d-block mt-2">
+                            {{ remaining }} lesson{{ 's' if remaining != 1 else '' }} remaining
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100 stat-card border-0">
+                <div class="card-body">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-book-open fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="mb-1">{{ lesson_data|length }}</h3>
+                    <p class="text-muted mb-0">Total Lessons</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100 stat-card border-0">
+                <div class="card-body">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-check-circle fa-3x text-success"></i>
+                    </div>
+                    <h3 class="mb-1">{{ lesson_data|selectattr('completed')|list|length }}</h3>
+                    <p class="text-muted mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100 stat-card border-0">
+                <div class="card-body">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-clock fa-3x text-warning"></i>
+                    </div>
+                    <h3 class="mb-1">{{ lesson_data|rejectattr('completed')|list|length }}</h3>
+                    <p class="text-muted mb-0">Remaining</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100 stat-card border-0">
+                <div class="card-body">
+                    <div class="stat-icon mb-3">
+                        <i class="fas fa-percentage fa-3x text-info"></i>
+                    </div>
+                    <h3 class="mb-1">{{ enrollment.progress }}%</h3>
+                    <p class="text-muted mb-0">Progress</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lessons Progress List -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-gradient text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list-check"></i> Detailed Lesson Progress
+                </h5>
+                <span class="badge bg-white text-dark">
+                    {{ lesson_data|selectattr('completed')|list|length }}/{{ lesson_data|length }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% for item in lesson_data %}
+                <div class="list-group-item lesson-progress-item {% if item.completed %}completed{% endif %}">
+                    <div class="row align-items-center py-2">
+                        <!-- Lesson Number/Status -->
+                        <div class="col-auto">
+                            <div class="lesson-status-badge">
+                                {% if item.completed %}
+                                <span class="badge rounded-circle p-3 bg-success">
+                                    <i class="fas fa-check fa-lg"></i>
+                                </span>
+                                {% else %}
+                                <span class="badge rounded-circle p-3 bg-secondary">
+                                    <strong>{{ item.lesson.order }}</strong>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Lesson Info -->
+                        <div class="col">
+                            <h6 class="mb-1 fw-bold">
+                                <i class="fas fa-book-reader text-primary"></i>
+                                {{ item.lesson.title }}
+                                {% if item.lesson.video_url %}
+                                <span class="badge bg-danger ms-2">
+                                    <i class="fas fa-video"></i> Video
+                                </span>
+                                {% endif %}
+                            </h6>
+                            <div class="d-flex flex-wrap gap-3 align-items-center">
+                                {% if item.lesson.duration %}
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> {{ item.lesson.duration }} minutes
+                                </small>
+                                {% endif %}
+
+                                {% if item.completed and item.completed_at %}
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    Completed: {{ item.completed_at.strftime('%b %d, %Y at %I:%M %p') }}
+                                </small>
+                                {% else %}
+                                <small class="text-warning">
+                                    <i class="fas fa-hourglass-half"></i> Not started yet
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Progress Indicator -->
+                        <div class="col-auto">
+                            <div class="circular-progress">
+                                {% if item.completed %}
+                                <div class="circular-progress-100">
+                                    <svg width="60" height="60">
+                                        <circle cx="30" cy="30" r="25" stroke="#e9ecef" stroke-width="5" fill="none" />
+                                        <circle cx="30" cy="30" r="25" stroke="#28a745" stroke-width="5" fill="none"
+                                            stroke-dasharray="157" stroke-dashoffset="0"
+                                            style="transform: rotate(-90deg); transform-origin: center;" />
+                                    </svg>
+                                    <div class="circular-progress-text">100%</div>
+                                </div>
+                                {% else %}
+                                <div class="circular-progress-0">
+                                    <svg width="60" height="60">
+                                        <circle cx="30" cy="30" r="25" stroke="#e9ecef" stroke-width="5" fill="none" />
+                                    </svg>
+                                    <div class="circular-progress-text">0%</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="col-auto">
+                            {% if item.completed %}
+                            <a href="{{ url_for('courses.view_lesson', lesson_id=item.lesson.id) }}"
+                                class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-eye"></i> Review
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('courses.view_lesson', lesson_id=item.lesson.id) }}"
+                                class="btn btn-sm btn-primary">
+                                <i class="fas fa-play"></i> Start Learning
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Continue Learning Button -->
+    <div class="text-center mt-4">
+        {% if not enrollment.completed %}
+        {% set next_lesson = lesson_data|rejectattr('completed')|first %}
+        {% if next_lesson %}
+        <a href="{{ url_for('courses.view_lesson', lesson_id=next_lesson.lesson.id) }}"
+            class="btn btn-primary btn-lg px-5 py-3">
+            <i class="fas fa-play-circle"></i> Continue Learning
+        </a>
+        <p class="text-muted mt-2">
+            Next: <strong>{{ next_lesson.lesson.title }}</strong>
+        </p>
+        {% endif %}
+        {% else %}
+        <div class="mt-4">
+            <h4 class="mb-3">🎉 What's Next?</h4>
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                <a href="{{ url_for('courses.browse') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-search"></i> Explore More Courses
+                </a>
+                <a href="{{ url_for('main.my_courses') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-book"></i> My Courses
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Animate progress bar on load
+        const progressBar = $('.progress-bar');
+        const targetWidth = progressBar.attr('aria-valuenow') + '%';
+
+        progressBar.css('width', '0%');
+        setTimeout(() => {
+            progressBar.animate({
+                width: targetWidth
+            }, 2000, 'easeOutCubic');
+        }, 300);
+
+        // Add hover effects to lesson items
+        $('.lesson-progress-item').hover(
+            function () {
+                $(this).addClass('shadow-sm bg-light');
+            },
+            function () {
+                $(this).removeClass('shadow-sm bg-light');
+            }
+        );
+
+        // Animate stat cards on scroll
+        $(window).on('scroll', function () {
+            $('.stat-card').each(function () {
+                const elementTop = $(this).offset().top;
+                const scrollTop = $(window).scrollTop();
+                const windowHeight = $(window).height();
+
+                if (scrollTop + windowHeight > elementTop + 50) {
+                    $(this).addClass('animate-in');
+                }
+            });
+        });
+
+        // Trigger animation on page load
+        setTimeout(() => {
+            $('.stat-card').addClass('animate-in');
+        }, 500);
+
+        // Trophy animation if completed
+        if ($('.trophy-icon').length) {
+            setInterval(() => {
+                $('.trophy-icon').addClass('bounce');
+                setTimeout(() => {
+                    $('.trophy-icon').removeClass('bounce');
+                }, 1000);
+            }, 3000);
+        }
+
+        // Add stagger animation to lesson items
+        $('.lesson-progress-item').each(function (index) {
+            $(this).css({
+                'opacity': '0',
+                'transform': 'translateX(-20px)'
+            });
+
+            setTimeout(() => {
+                $(this).animate({
+                    opacity: 1
+                }, 300).css({
+                    'transform': 'translateX(0)',
+                    'transition': 'transform 0.3s ease'
+                });
+            }, index * 100);
+        });
+    });
+</script>
+
+<style>
+    /* Background gradient for header */
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Lesson status badge */
+    .lesson-status-badge .badge {
+        width: 55px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Lesson progress item */
+    .lesson-progress-item {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+        position: relative;
+    }
+
+    .lesson-progress-item:hover {
+        border-left-color: #667eea;
+        transform: translateX(5px);
+    }
+
+    .lesson-progress-item.completed {
+        background-color: rgba(40, 167, 69, 0.05);
+    }
+
+    /* Stat cards animation */
+    .stat-card {
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .stat-card.animate-in {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .stat-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1);
+    }
+
+    /* Completion badge animation */
+    .completion-badge {
+        animation: fadeInUp 1s ease;
+    }
+
+    .learning-badge {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    /* Trophy bounce animation */
+    .trophy-icon.bounce {
+        animation: bounce 1s ease;
+    }
+
+    @keyframes bounce {
+
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+            transform: translateY(0);
+        }
+
+        40% {
+            transform: translateY(-20px);
+        }
+
+        60% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* Circular progress */
+    .circular-progress {
+        position: relative;
+        width: 60px;
+        height: 60px;
+    }
+
+    .circular-progress-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: #495057;
+    }
+
+    /* Progress bar animation */
+    .progress-bar {
+        transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .lesson-status-badge .badge {
+            width: 45px;
+            height: 45px;
+            font-size: 1rem;
+        }
+
+        .circular-progress {
+            width: 50px;
+            height: 50px;
+        }
+
+        .circular-progress svg {
+            width: 50px;
+            height: 50px;
+        }
+
+        .stat-card h3 {
+            font-size: 1.5rem;
+        }
+    }
+
+    /* Custom scrollbar for lesson list */
+    .list-group-flush {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .list-group-flush::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .list-group-flush::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .list-group-flush::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 4px;
+    }
+
+    .list-group-flush::-webkit-scrollbar-thumb:hover {
+        background: #764ba2;
+    }
+
+    /* Button hover effects */
+    .btn {
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Badge styling */
+    .badge {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}

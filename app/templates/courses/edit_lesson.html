@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Lesson{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0"><i class="fas fa-edit"></i> Edit Lesson</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Editing lesson in: <strong>{{ course.title }}</strong>
+                    </div>
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Lesson Title -->
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.title.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">A clear, descriptive title for this lesson</small>
+                        </div>
+
+                        <!-- Lesson Content -->
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            <small class="text-muted">Supports HTML formatting</small>
+                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""),
+                            rows=12) }}
+                            {% if form.content.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.content.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">
+                                You can use HTML tags like &lt;h3&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;pre&gt;, etc.
+                            </small>
+                        </div>
+
+                        <!-- Order and Duration Row -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.order.label(class="form-label") }}
+                                {{ form.order(class="form-control" + (" is-invalid" if form.order.errors else "")) }}
+                                {% if form.order.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.order.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-muted">Lesson position in the course sequence</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.duration.label(class="form-label") }}
+                                {{ form.duration(class="form-control", placeholder="e.g., 45") }}
+                                <small class="text-muted">Estimated duration in minutes</small>
+                            </div>
+                        </div>
+
+                        <!-- Video URL -->
+                        <div class="mb-3">
+                            {{ form.video_url.label(class="form-label") }}
+                            {{ form.video_url(class="form-control", placeholder="https://youtube.com/watch?v=...") }}
+                            <small class="text-muted">YouTube or Vimeo URL (optional)</small>
+                        </div>
+
+                        <!-- Current Lesson Info -->
+                        <div class="alert alert-light">
+                            <strong>Current Lesson Info:</strong><br>
+                            Created: {{ lesson.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Update Lesson
+                            </button>
+                            <a href="{{ url_for('courses.manage_lessons', course_id=course.id) }}"
+                                class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <a href="{{ url_for('main.view_lesson', lesson_id=lesson.id) }}"
+                                class="btn btn-info ms-auto">
+                                <i class="fas fa-eye"></i> Preview
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Tips for Great Lessons</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Start with a clear objective</li>
+                        <li>Break down complex topics into simple steps</li>
+                        <li>Use examples and code snippets</li>
+                        <li>Include practice exercises</li>
+                        <li>Keep lessons focused and concise</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Form submission loading state
+        $('form').on('submit', function () {
+            $(this).find('button[type="submit"]').html(
+                '<span class="spinner-border spinner-border-sm"></span> Updating...'
+            ).prop('disabled', true);
+        });
+
+        // Character counter for content
+        const contentTextarea = $('#content');
+        const charCount = $('<small class="text-muted d-block mt-1">Characters: <span id="char-count">0</span></small>');
+        contentTextarea.after(charCount);
+
+        contentTextarea.on('input', function () {
+            $('#char-count').text($(this).val().length);
+        });
+
+        // Trigger initial count
+        $('#char-count').text(contentTextarea.val().length);
+    });
+</script>
+{% endblock %}
