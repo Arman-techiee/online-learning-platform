@@ -23,22 +23,48 @@
             <p class="lead">{{ course.description }}</p>
 
             <h3 class="mt-4">Course Content</h3>
+            <p class="text-muted mb-3">
+                <i class="fas fa-book"></i> {{ lessons|length }} Lessons
+                {% if lessons|sum(attribute='duration') %}
+                | <i class="fas fa-clock"></i> Total: {{ lessons|sum(attribute='duration') }} minutes
+                {% endif %}
+            </p>
+
             <div class="accordion" id="lessonsAccordion">
                 {% for lesson in lessons %}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                             data-bs-target="#lesson{{ lesson.id }}">
-                            Lesson {{ lesson.order }}: {{ lesson.title }}
+                            <span class="badge bg-primary me-2">{{ lesson.order }}</span>
+                            {{ lesson.title }}
                             {% if lesson.duration %}
-                            <span class="badge bg-info ms-auto">{{ lesson.duration }} min</span>
+                            <span class="badge bg-info ms-auto me-2">{{ lesson.duration }} min</span>
+                            {% endif %}
+                            {% if lesson.video_url %}
+                            <span class="badge bg-danger ms-2">
+                                <i class="fas fa-video"></i> Video
+                            </span>
                             {% endif %}
                         </button>
                     </h2>
                     <div id="lesson{{ lesson.id }}" class="accordion-collapse collapse"
                         data-bs-parent="#lessonsAccordion">
                         <div class="accordion-body">
-                            {{ lesson.content[:200] }}...
+                            <p>{{ lesson.content|striptags|truncate(200) }}</p>
+
+                            {% if is_enrolled %}
+                            <!-- Show View Lesson button for enrolled students -->
+                            <a href="{{ url_for('courses.view_lesson', lesson_id=lesson.id) }}"
+                                class="btn btn-primary btn-sm">
+                                <i class="fas fa-play-circle"></i> View Lesson
+                            </a>
+                            {% else %}
+                            <!-- Show enrollment message for non-enrolled users -->
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-lock"></i> Enroll in this course to access full lesson content
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -49,28 +75,61 @@
         <div class="col-md-4">
             <div class="card shadow-sm sticky-top" style="top: 20px;">
                 <div class="card-body">
-                    <h3 class="text-primary mb-3">Rs. {{ course.price }}</h3>
+                    <h3 class="text-primary mb-3">Rs. {{ "%.2f"|format(course.price) }}</h3>
 
                     {% if current_user.is_authenticated %}
                     {% if is_enrolled %}
+                    <!-- For enrolled students -->
                     <button class="btn btn-success w-100 mb-3" disabled>
                         <i class="fas fa-check"></i> Enrolled
                     </button>
+
+                    <!-- View Progress Button -->
+                    <a href="{{ url_for('courses.course_progress', course_id=course.id) }}"
+                        class="btn btn-info w-100 mb-2">
+                        <i class="fas fa-chart-line"></i> View Progress
+                    </a>
+
+                    <!-- Start Learning Button -->
+                    {% if lessons %}
+                    <a href="{{ url_for('courses.view_lesson', lesson_id=lessons[0].id) }}"
+                        class="btn btn-primary w-100">
+                        <i class="fas fa-play"></i> Start Learning
+                    </a>
+                    {% endif %}
+
                     {% elif current_user.role == 'student' %}
+                    <!-- Enroll button for non-enrolled students -->
                     <form method="POST" action="{{ url_for('courses.enroll', course_id=course.id) }}">
                         <button type="submit" class="btn btn-primary w-100 mb-3">
                             <i class="fas fa-shopping-cart"></i> Enroll Now
                         </button>
                     </form>
                     {% endif %}
+
+                    <!-- For Instructors - Manage Lessons Button -->
+                    {% if current_user.id == course.instructor_id %}
+                    <a href="{{ url_for('courses.manage_lessons', course_id=course.id) }}"
+                        class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-cog"></i> Manage Lessons
+                    </a>
+                    {% endif %}
                     {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100 mb-3">Login to Enroll</a>
+                    <!-- Login button for guests -->
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100 mb-3">
+                        Login to Enroll
+                    </a>
                     {% endif %}
 
                     <h5 class="mt-4">Course Includes:</h5>
                     <ul class="list-unstyled">
-                        <li><i class="fas fa-video text-primary"></i> {{ lessons|length }} Lessons</li>
+                        <li><i class="fas fa-book text-primary"></i> {{ lessons|length }} Lessons</li>
+                        {% if lessons|sum(attribute='duration') %}
+                        <li><i class="fas fa-clock text-primary"></i> {{ lessons|sum(attribute='duration') }} minutes of
+                            content</li>
+                        {% endif %}
                         <li><i class="fas fa-infinity text-primary"></i> Lifetime Access</li>
+                        <li><i class="fas fa-mobile-alt text-primary"></i> Access on mobile and desktop</li>
                         <li><i class="fas fa-certificate text-primary"></i> Certificate of Completion</li>
                     </ul>
 
@@ -90,16 +149,14 @@
     </div>
 </div>
 {% endblock %}
-<!-- For Students - View Progress Button -->
-{% if current_user.is_authenticated and current_user.role == 'student' and is_enrolled %}
-<a href="{{ url_for('courses.course_progress', course_id=course.id) }}" class="btn btn-info w-100 mb-2">
-    <i class="fas fa-chart-line"></i> View Progress
-</a>
-{% endif %}
 
-<!-- For Instructors - Manage Lessons Button -->
-{% if current_user.is_authenticated and current_user.id == course.instructor_id %}
-<a href="{{ url_for('courses.manage_lessons', course_id=course.id) }}" class="btn btn-warning w-100 mb-2">
-    <i class="fas fa-cog"></i> Manage Lessons
-</a>
-{% endif %}
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Add smooth animation to accordion
+        $('.accordion-button').on('click', function () {
+            $(this).find('.badge').toggleClass('rotate-icon');
+        });
+    });
+</script>
+{% endblock %}
