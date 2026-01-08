@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Add Lesson{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-plus-circle"></i> Add New Lesson</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Adding lesson to: <strong>{{ course.title }}</strong>
+                    </div>
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.title.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            <small class="text-muted">Supports HTML formatting</small>
+                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""),
+                            rows=12) }}
+                            {% if form.content.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.content.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.order.label(class="form-label") }}
+                                {{ form.order(class="form-control" + (" is-invalid" if form.order.errors else "")) }}
+                                {% if form.order.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.order.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.duration.label(class="form-label") }}
+                                {{ form.duration(class="form-control", placeholder="e.g., 45") }}
+                                <small class="text-muted">Duration in minutes</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.video_url.label(class="form-label") }}
+                            {{ form.video_url(class="form-control", placeholder="https://youtube.com/watch?v=...") }}
+                            <small class="text-muted">YouTube or Vimeo URL (optional)</small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Add Lesson
+                            </button>
+                            <a href="{{ url_for('courses.manage_lessons', course_id=course.id) }}"
+                                class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

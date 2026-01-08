@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Course{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Edit Course</h1>
+        <a href="{{ url_for('main.instructor_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST" action="" enctype="multipart/form-data" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Course Title -->
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.title.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Enter a clear, descriptive title for your course</small>
+                        </div>
+
+                        <!-- Course Description -->
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else
+                            ""), rows=5) }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Provide a detailed description of what students will learn</small>
+                        </div>
+
+                        <!-- Category and Difficulty Row -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.category.label(class="form-label") }}
+                                {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else ""))
+                                }}
+                                {% if form.category.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.difficulty.label(class="form-label") }}
+                                {{ form.difficulty(class="form-select" + (" is-invalid" if form.difficulty.errors else
+                                "")) }}
+                                {% if form.difficulty.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.difficulty.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Course Price -->
+                        <div class="mb-3">
+                            {{ form.price.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">Rs.</span>
+                                {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else "")) }}
+                                {% if form.price.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.price.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Set price to 0 for free courses</small>
+                        </div>
+
+                        <!-- Current Course Image -->
+                        {% if course.image and course.image != 'default_course.jpg' %}
+                        <div class="mb-3">
+                            <label class="form-label">Current Course Image</label>
+                            <div>
+                                <img src="{{ url_for('static', filename='uploads/courses/' + course.image) }}"
+                                    class="img-thumbnail" style="max-width: 300px;" alt="Current course image"
+                                    onerror="this.src='{{ url_for('static', filename='images/default_course.jpg') }}'">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Upload New Image -->
+                        <div class="mb-3">
+                            {{ form.image.label(class="form-label") }}
+                            {{ form.image(class="form-control") }}
+                            <small class="text-muted">Upload a new image to replace the current one (JPG, PNG, or
+                                GIF)</small>
+                        </div>
+
+                        <!-- Publish Status -->
+                        <div class="mb-3 form-check">
+                            {{ form.is_published(class="form-check-input") }}
+                            {{ form.is_published.label(class="form-check-label") }}
+                            <small class="d-block text-muted">Published courses are visible to students</small>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Course
+                            </button>
+                            <a href="{{ url_for('courses.detail', course_id=course.id) }}" class="btn btn-info">
+                                <i class="fas fa-eye"></i> View Course
+                            </a>
+                            <a href="{{ url_for('main.instructor_dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar with Course Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Course Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Students:</strong> {{ course.enrollments.count() }}</p>
+                    <p><strong>Total Lessons:</strong> {{ course.lessons.count() }}</p>
+                    <p><strong>Total Assignments:</strong> {{ course.assignments.count() }}</p>
+                    <p><strong>Created:</strong> {{ course.created_at.strftime('%B %d, %Y') }}</p>
+                    <p><strong>Last Updated:</strong> {{ course.updated_at.strftime('%B %d, %Y') }}</p>
+                    <p>
+                        <strong>Status:</strong>
+                        {% if course.is_published %}
+                        <span class="badge bg-success">Published</span>
+                        {% else %}
+                        <span class="badge bg-warning">Draft</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Quick Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="small">
+                        <li>Use a clear, descriptive title</li>
+                        <li>Write a detailed description</li>
+                        <li>Choose appropriate category</li>
+                        <li>Set the right difficulty level</li>
+                        <li>Upload high-quality images (400x300px recommended)</li>
+                        <li>Publish only when content is ready</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        // Preview image before upload
+        $('input[type="file"]').change(function () {
+            const file = this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const preview = $('.img-thumbnail');
+                    if (preview.length) {
+                        preview.attr('src', e.target.result);
+                    } else {
+                        $('input[type="file"]').after(
+                            `<img src="${e.target.result}" class="img-thumbnail mt-2" style="max-width: 300px;" alt="Preview">`
+                        );
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form validation feedback
+        $('form').on('submit', function () {
+            $(this).find('button[type="submit"]').html(
+                '<span class="spinner-border spinner-border-sm"></span> Updating...'
+            ).prop('disabled', true);
+        });
+    });
+</script>
+{% endblock %}

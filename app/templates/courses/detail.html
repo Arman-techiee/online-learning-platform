@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8">
+            <img src="{{ url_for('static', filename='uploads/courses/' + course.image) }}"
+                class="img-fluid rounded mb-4" alt="{{ course.title }}"
+                onerror="this.src='{{ url_for('static', filename='images/default_course.jpg') }}'">
+
+            <h1>{{ course.title }}</h1>
+            <div class="mb-3">
+                <span class="badge bg-primary">{{ course.category }}</span>
+                <span class="badge bg-secondary">{{ course.difficulty }}</span>
+                <span class="text-muted ms-2">
+                    <i class="far fa-calendar"></i> Created {{ course.created_at.strftime('%B %d, %Y') }}
+                </span>
+            </div>
+
+            <h3 class="mt-4">About This Course</h3>
+            <p class="lead">{{ course.description }}</p>
+
+            <h3 class="mt-4">Course Content</h3>
+            <div class="accordion" id="lessonsAccordion">
+                {% for lesson in lessons %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#lesson{{ lesson.id }}">
+                            Lesson {{ lesson.order }}: {{ lesson.title }}
+                            {% if lesson.duration %}
+                            <span class="badge bg-info ms-auto">{{ lesson.duration }} min</span>
+                            {% endif %}
+                        </button>
+                    </h2>
+                    <div id="lesson{{ lesson.id }}" class="accordion-collapse collapse"
+                        data-bs-parent="#lessonsAccordion">
+                        <div class="accordion-body">
+                            {{ lesson.content[:200] }}...
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h3 class="text-primary mb-3">Rs. {{ course.price }}</h3>
+
+                    {% if current_user.is_authenticated %}
+                    {% if is_enrolled %}
+                    <button class="btn btn-success w-100 mb-3" disabled>
+                        <i class="fas fa-check"></i> Enrolled
+                    </button>
+                    {% elif current_user.role == 'student' %}
+                    <form method="POST" action="{{ url_for('courses.enroll', course_id=course.id) }}">
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-shopping-cart"></i> Enroll Now
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary w-100 mb-3">Login to Enroll</a>
+                    {% endif %}
+
+                    <h5 class="mt-4">Course Includes:</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-video text-primary"></i> {{ lessons|length }} Lessons</li>
+                        <li><i class="fas fa-infinity text-primary"></i> Lifetime Access</li>
+                        <li><i class="fas fa-certificate text-primary"></i> Certificate of Completion</li>
+                    </ul>
+
+                    <h5 class="mt-4">Instructor:</h5>
+                    <div class="d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + course.instructor.profile_pic) }}"
+                            class="rounded-circle me-2" width="50" height="50"
+                            onerror="this.src='{{ url_for('static', filename='images/default.jpg') }}'">
+                        <div>
+                            <strong>{{ course.instructor.username }}</strong>
+                            <p class="text-muted mb-0 small">{{ course.instructor.role.title() }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

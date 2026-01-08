@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <h1 class="mb-4">Admin Dashboard</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm bg-primary text-white">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <h3>{{ total_users }}</h3>
+                    <p>Total Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm bg-success text-white">
+                <div class="card-body">
+                    <i class="fas fa-book fa-3x mb-3"></i>
+                    <h3>{{ total_courses }}</h3>
+                    <p>Total Courses</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm bg-warning text-white">
+                <div class="card-body">
+                    <i class="fas fa-user-graduate fa-3x mb-3"></i>
+                    <h3>{{ students }}</h3>
+                    <p>Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm bg-info text-white">
+                <div class="card-body">
+                    <i class="fas fa-chalkboard-teacher fa-3x mb-3"></i>
+                    <h3>{{ instructors }}</h3>
+                    <p>Instructors</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Recent Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td><span class="badge bg-secondary">{{ user.role }}</span></td>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-primary">View All Users</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Recent Courses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Instructor</th>
+                                    <th>Category</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in recent_courses %}
+                                <tr>
+                                    <td>{{ course.title[:30] }}</td>
+                                    <td>{{ course.instructor.username }}</td>
+                                    <td><span class="badge bg-primary">{{ course.category }}</span></td>
+                                    <td>{{ course.created_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{{ url_for('admin.courses') }}" class="btn btn-sm btn-success">View All Courses</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-users"></i> Manage Users
+                    </a>
+                    <a href="{{ url_for('admin.courses') }}" class="btn btn-success me-2">
+                        <i class="fas fa-book"></i> Manage Courses
+                    </a>
+                    <a href="{{ url_for('courses.browse') }}" class="btn btn-info">
+                        <i class="fas fa-eye"></i> View Site
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
