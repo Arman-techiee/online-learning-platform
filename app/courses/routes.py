@@ -343,7 +343,10 @@ def edit_lesson(lesson_id):
             if lesson.pdf_file:
                 old_filepath = os.path.join('app/static/uploads/pdfs', lesson.pdf_file)
                 if os.path.exists(old_filepath):
-                    os.remove(old_filepath)
+                    try:
+                        os.remove(old_filepath)
+                    except Exception as e:
+                        print(f"Error deleting old PDF: {e}")
             
             # Save new PDF
             file = form.pdf_file.data
@@ -391,7 +394,10 @@ def delete_lesson(lesson_id):
     if lesson.pdf_file:
         pdf_filepath = os.path.join('app/static/uploads/pdfs', lesson.pdf_file)
         if os.path.exists(pdf_filepath):
-            os.remove(pdf_filepath)
+            try:
+                os.remove(pdf_filepath)
+            except Exception as e:
+                print(f"Error deleting PDF: {e}")
     
     course_id = course.id
     db.session.delete(lesson)
@@ -434,9 +440,21 @@ def download_pdf(lesson_id):
         flash('No PDF attachment found for this lesson.', 'warning')
         return redirect(url_for('courses.view_lesson', lesson_id=lesson_id))
     
+    # Construct the full file path
+    pdf_directory = os.path.join(os.getcwd(), 'app', 'static', 'uploads', 'pdfs')
+    pdf_path = os.path.join(pdf_directory, lesson.pdf_file)
+    
+    # Check if file exists
+    if not os.path.exists(pdf_path):
+        flash(f'PDF file not found on server.', 'danger')
+        return redirect(url_for('courses.view_lesson', lesson_id=lesson_id))
+    
     # Serve the PDF file
-    pdf_directory = os.path.join('app', 'static', 'uploads', 'pdfs')
-    return send_from_directory(pdf_directory, lesson.pdf_file, as_attachment=False)
+    try:
+        return send_from_directory(pdf_directory, lesson.pdf_file, as_attachment=False)
+    except Exception as e:
+        flash(f'Error loading PDF: {str(e)}', 'danger')
+        return redirect(url_for('courses.view_lesson', lesson_id=lesson_id))
 
 
 # ============================================================================
