@@ -111,7 +111,7 @@ class Enrollment(db.Model):
 
 
 # ============================================================================
-# LESSON MODEL
+# LESSON MODEL (UPDATED WITH PDF SUPPORT)
 # ============================================================================
 
 class Lesson(db.Model):
@@ -125,6 +125,7 @@ class Lesson(db.Model):
     order = db.Column(db.Integer, nullable=False)  # Sequence number
     video_url = db.Column(db.String(255))  # Optional video link
     duration = db.Column(db.Integer)  # Duration in minutes
+    pdf_file = db.Column(db.String(255))  # PDF attachment filename - NEW FIELD
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -136,7 +137,7 @@ class Lesson(db.Model):
 
 
 # ============================================================================
-# LESSON PROGRESS MODEL (NEW - FOR TRACKING)
+# LESSON PROGRESS MODEL (FOR TRACKING)
 # ============================================================================
 
 class LessonProgress(db.Model):
@@ -175,26 +176,3 @@ class Assignment(db.Model):
     
     def __repr__(self):
         return f'<Assignment {self.title}>'
-
-# Find the Lesson model in app/models.py and update it:
-
-class Lesson(db.Model):
-    """Lesson model for course content"""
-    __tablename__ = 'lessons'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    order = db.Column(db.Integer, nullable=False)  # Sequence number
-    video_url = db.Column(db.String(255))  # Optional video link
-    duration = db.Column(db.Integer)  # Duration in minutes
-    pdf_file = db.Column(db.String(255))  # NEW: PDF attachment filename
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    progress_records = db.relationship('LessonProgress', backref='lesson', 
-                                      lazy='dynamic', cascade='all, delete-orphan')
-    
-    def __repr__(self):
-        return f'<Lesson {self.title}>'
