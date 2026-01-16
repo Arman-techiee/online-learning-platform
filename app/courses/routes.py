@@ -1,10 +1,10 @@
 # app/courses/routes.py
 """
 Complete routes for course and lesson management
-Includes CRUD operations for courses and lessons, plus progress tracking
+Includes CRUD operations for courses and lessons, plus progress tracking and PDF support
 """
 
-from flask import render_template, redirect, url_for, flash, request, abort, jsonify
+from flask import render_template, redirect, url_for, flash, request, abort, jsonify, send_from_directory
 from flask_login import login_required, current_user
 from app import db
 from app.courses import bp
@@ -276,6 +276,19 @@ def add_lesson(course_id):
             duration=form.duration.data
         )
         
+        # Handle PDF upload
+        if form.pdf_file.data:
+            file = form.pdf_file.data
+            filename = secure_filename(file.filename)
+            filename = f"lesson_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+            filepath = os.path.join('app/static/uploads/pdfs', filename)
+            
+            # Create pdfs folder if it doesn't exist
+            os.makedirs('app/static/uploads/pdfs', exist_ok=True)
+            
+            file.save(filepath)
+            lesson.pdf_file = filename
+        
         db.session.add(lesson)
         db.session.commit()
         
@@ -324,6 +337,26 @@ def edit_lesson(lesson_id):
         lesson.video_url = form.video_url.data
         lesson.duration = form.duration.data
         
+        # Handle PDF upload
+        if form.pdf_file.data:
+            # Delete old PDF if exists
+            if lesson.pdf_file:
+                old_filepath = os.path.join('app/static/uploads/pdfs', lesson.pdf_file)
+                if os.path.exists(old_filepath):
+                    os.remove(old_filepath)
+            
+            # Save new PDF
+            file = form.pdf_file.data
+            filename = secure_filename(file.filename)
+            filename = f"lesson_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+            filepath = os.path.join('app/static/uploads/pdfs', filename)
+            
+            # Create pdfs folder if it doesn't exist
+            os.makedirs('app/static/uploads/pdfs', exist_ok=True)
+            
+            file.save(filepath)
+            lesson.pdf_file = filename
+        
         db.session.commit()
         flash('Lesson updated successfully!', 'success')
         return redirect(url_for('courses.manage_lessons', course_id=course.id))
@@ -354,12 +387,56 @@ def delete_lesson(lesson_id):
     if course.instructor_id != current_user.id and current_user.role != 'admin':
         abort(403)
     
+    # Delete associated PDF if exists
+    if lesson.pdf_file:
+        pdf_filepath = os.path.join('app/static/uploads/pdfs', lesson.pdf_file)
+        if os.path.exists(pdf_filepath):
+            os.remove(pdf_filepath)
+    
     course_id = course.id
     db.session.delete(lesson)
     db.session.commit()
     flash('Lesson deleted successfully.', 'success')
     
     return redirect(url_for('courses.manage_lessons', course_id=course_id))
+
+
+# ============================================================================
+# PDF DOWNLOAD ROUTE
+# ============================================================================
+
+@bp.route('/lessons/<int:lesson_id>/download-pdf')
+@login_required
+def download_pdf(lesson_id):
+    """Download/view lesson PDF"""
+    lesson = Lesson.query.get_or_404(lesson_id)
+    course = lesson.course
+    
+    # Check if user has access (enrolled student, instructor, or admin)
+    has_access = False
+    
+    if current_user.role == 'admin':
+        has_access = True
+    elif current_user.id == course.instructor_id:
+        has_access = True
+    elif current_user.role == 'student':
+        enrollment = Enrollment.query.filter_by(
+            student_id=current_user.id,
+            course_id=course.id
+        ).first()
+        has_access = enrollment is not None
+    
+    if not has_access:
+        flash('You must be enrolled in this course to access lesson materials.', 'danger')
+        abort(403)
+    
+    if not lesson.pdf_file:
+        flash('No PDF attachment found for this lesson.', 'warning')
+        return redirect(url_for('courses.view_lesson', lesson_id=lesson_id))
+    
+    # Serve the PDF file
+    pdf_directory = os.path.join('app', 'static', 'uploads', 'pdfs')
+    return send_from_directory(pdf_directory, lesson.pdf_file, as_attachment=False)
 
 
 # ============================================================================

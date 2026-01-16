@@ -15,7 +15,7 @@
                         <i class="fas fa-info-circle"></i> Editing lesson in: <strong>{{ course.title }}</strong>
                     </div>
 
-                    <form method="POST" action="">
+                    <form method="POST" action="" enctype="multipart/form-data">
                         {{ form.hidden_tag() }}
 
                         <!-- Lesson Title -->
@@ -73,10 +73,49 @@
                             <small class="text-muted">YouTube or Vimeo URL (optional)</small>
                         </div>
 
+                        <!-- Current PDF Attachment -->
+                        {% if lesson.pdf_file %}
+                        <div class="mb-3">
+                            <label class="form-label">Current PDF Attachment</label>
+                            <div class="alert alert-success d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="fas fa-file-pdf text-danger fa-2x me-3"></i>
+                                    <span class="fw-bold">{{ lesson.pdf_file }}</span>
+                                </div>
+                                <a href="{{ url_for('courses.download_pdf', lesson_id=lesson.id) }}"
+                                    class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="fas fa-eye"></i> View PDF
+                                </a>
+                            </div>
+                            <small class="text-muted">Upload a new PDF to replace this one</small>
+                        </div>
+                        {% endif %}
+
+                        <!-- NEW: PDF Upload Field -->
+                        <div class="mb-3">
+                            {{ form.pdf_file.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.pdf_file(class="form-control") }}
+                                <span class="input-group-text">
+                                    <i class="fas fa-file-pdf text-danger"></i>
+                                </span>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> Upload study materials, notes, or reference documents
+                                (PDF only, max 16MB)
+                                {% if lesson.pdf_file %}
+                                <br><strong>Note:</strong> Uploading a new file will replace the existing one
+                                {% endif %}
+                            </small>
+                        </div>
+
                         <!-- Current Lesson Info -->
                         <div class="alert alert-light">
                             <strong>Current Lesson Info:</strong><br>
                             Created: {{ lesson.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            {% if lesson.pdf_file %}
+                            <br>Has PDF Attachment: Yes
+                            {% endif %}
                         </div>
 
                         <!-- Action Buttons -->
@@ -109,6 +148,7 @@
                         <li>Use examples and code snippets</li>
                         <li>Include practice exercises</li>
                         <li>Keep lessons focused and concise</li>
+                        <li>Provide supplementary materials (PDFs) for reference</li>
                     </ul>
                 </div>
             </div>
@@ -138,6 +178,19 @@
 
         // Trigger initial count
         $('#char-count').text(contentTextarea.val().length);
+
+        // File input preview
+        $('input[type="file"]').on('change', function () {
+            const fileName = $(this).val().split('\\').pop();
+            if (fileName) {
+                $(this).next('.input-group-text').html('<i class="fas fa-check text-success"></i>');
+                if (!$('.file-selected-notice').length) {
+                    $(this).closest('.mb-3').find('small').after(
+                        '<div class="alert alert-success mt-2 file-selected-notice"><i class="fas fa-check-circle"></i> File selected: ' + fileName + '</div>'
+                    );
+                }
+            }
+        });
     });
 </script>
 {% endblock %}

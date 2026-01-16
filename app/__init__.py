@@ -26,6 +26,7 @@ def create_app(config_class=Config):
     # Create upload folders if they don't exist
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'profiles'), exist_ok=True)
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'courses'), exist_ok=True)
+    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'pdfs'), exist_ok=True)  # NEW
     os.makedirs('instance', exist_ok=True)
     
     # Register blueprints

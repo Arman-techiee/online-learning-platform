@@ -75,6 +75,10 @@ class LessonForm(FlaskForm):
     order = IntegerField('Lesson Order', validators=[DataRequired()])
     video_url = StringField('Video URL (Optional)', validators=[Optional(), Length(max=255)])
     duration = IntegerField('Duration (minutes)', validators=[Optional()])
+    pdf_file = FileField('PDF Attachment (Optional)', validators=[
+        Optional(),
+        FileAllowed(['pdf'], 'PDF files only!')
+    ])
 
 class ProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=80)])
