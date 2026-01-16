@@ -28,6 +28,10 @@
                 {% if lessons|sum(attribute='duration') %}
                 | <i class="fas fa-clock"></i> Total: {{ lessons|sum(attribute='duration') }} minutes
                 {% endif %}
+                {% set pdf_count = lessons|selectattr('pdf_file')|list|length %}
+                {% if pdf_count > 0 %}
+                | <i class="fas fa-file-pdf text-success"></i> {{ pdf_count }} PDF{{ 's' if pdf_count != 1 else '' }}
+                {% endif %}
             </p>
 
             <div class="accordion" id="lessonsAccordion">
@@ -46,6 +50,11 @@
                                 <i class="fas fa-video"></i> Video
                             </span>
                             {% endif %}
+                            {% if lesson.pdf_file %}
+                            <span class="badge bg-success ms-2">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </span>
+                            {% endif %}
                         </button>
                     </h2>
                     <div id="lesson{{ lesson.id }}" class="accordion-collapse collapse"
@@ -53,16 +62,39 @@
                         <div class="accordion-body">
                             <p>{{ lesson.content|striptags|truncate(200) }}</p>
 
+                            <!-- Resource indicators -->
+                            <div class="mb-2">
+                                {% if lesson.video_url %}
+                                <span class="badge bg-danger me-1">
+                                    <i class="fas fa-video"></i> Video Lesson
+                                </span>
+                                {% endif %}
+                                {% if lesson.pdf_file %}
+                                <span class="badge bg-success me-1">
+                                    <i class="fas fa-file-pdf"></i> PDF Materials
+                                </span>
+                                {% endif %}
+                            </div>
+
                             {% if is_enrolled %}
                             <!-- Show View Lesson button for enrolled students -->
                             <a href="{{ url_for('courses.view_lesson', lesson_id=lesson.id) }}"
                                 class="btn btn-primary btn-sm">
                                 <i class="fas fa-play-circle"></i> View Lesson
                             </a>
+                            {% if lesson.pdf_file %}
+                            <a href="{{ url_for('courses.download_pdf', lesson_id=lesson.id) }}"
+                                class="btn btn-success btn-sm" target="_blank">
+                                <i class="fas fa-download"></i> Get PDF
+                            </a>
+                            {% endif %}
                             {% else %}
                             <!-- Show enrollment message for non-enrolled users -->
                             <div class="alert alert-info mb-0">
                                 <i class="fas fa-lock"></i> Enroll in this course to access full lesson content
+                                {% if lesson.pdf_file or lesson.video_url %}
+                                and downloadable materials
+                                {% endif %}
                             </div>
                             {% endif %}
                         </div>
@@ -127,6 +159,16 @@
                         {% if lessons|sum(attribute='duration') %}
                         <li><i class="fas fa-clock text-primary"></i> {{ lessons|sum(attribute='duration') }} minutes of
                             content</li>
+                        {% endif %}
+                        {% set pdf_count = lessons|selectattr('pdf_file')|list|length %}
+                        {% if pdf_count > 0 %}
+                        <li><i class="fas fa-file-pdf text-success"></i> {{ pdf_count }} Downloadable PDF{{ 's' if
+                            pdf_count != 1 else '' }}</li>
+                        {% endif %}
+                        {% set video_count = lessons|selectattr('video_url')|list|length %}
+                        {% if video_count > 0 %}
+                        <li><i class="fas fa-video text-danger"></i> {{ video_count }} Video Lesson{{ 's' if video_count
+                            != 1 else '' }}</li>
                         {% endif %}
                         <li><i class="fas fa-infinity text-primary"></i> Lifetime Access</li>
                         <li><i class="fas fa-mobile-alt text-primary"></i> Access on mobile and desktop</li>

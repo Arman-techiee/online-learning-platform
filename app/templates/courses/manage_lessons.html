@@ -52,9 +52,9 @@
         <div class="col-md-3">
             <div class="card shadow-sm bg-info text-white">
                 <div class="card-body text-center">
-                    <i class="fas fa-users fa-2x mb-2"></i>
-                    <h3>{{ course.enrollments.count() }}</h3>
-                    <p class="mb-0">Students</p>
+                    <i class="fas fa-file-pdf fa-2x mb-2"></i>
+                    <h3>{{ lessons|selectattr('pdf_file')|list|length }}</h3>
+                    <p class="mb-0">With PDFs</p>
                 </div>
             </div>
         </div>
@@ -88,12 +88,23 @@
                                     <i class="fas fa-video"></i> Video
                                 </span>
                                 {% endif %}
+                                {% if lesson.pdf_file %}
+                                <span class="badge bg-success ms-2">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </span>
+                                {% endif %}
                             </h5>
                             <p class="text-muted mb-1 small">
                                 {{ lesson.content|striptags|truncate(100) }}
                             </p>
                             <small class="text-muted">
                                 <i class="far fa-calendar"></i> Created: {{ lesson.created_at.strftime('%b %d, %Y') }}
+                                {% if lesson.pdf_file %}
+                                <span class="ms-2" title="Has PDF attachment">
+                                    <i class="fas fa-paperclip text-success"></i> {{ lesson.pdf_file[:30] }}{% if
+                                    lesson.pdf_file|length > 30 %}...{% endif %}
+                                </span>
+                                {% endif %}
                             </small>
                         </div>
 
@@ -111,17 +122,23 @@
                         <!-- Action Buttons -->
                         <div class="col-md-3 text-end">
                             <div class="btn-group" role="group">
-                            <a href="{{ url_for('courses.view_lesson', lesson_id=lesson.id) }}"
+                                <a href="{{ url_for('courses.view_lesson', lesson_id=lesson.id) }}"
                                     class="btn btn-sm btn-info" title="View Lesson">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                {% if lesson.pdf_file %}
+                                <a href="{{ url_for('courses.download_pdf', lesson_id=lesson.id) }}"
+                                    class="btn btn-sm btn-success" title="View PDF" target="_blank">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
                                 <a href="{{ url_for('courses.edit_lesson', lesson_id=lesson.id) }}"
                                     class="btn btn-sm btn-warning" title="Edit Lesson">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form method="POST" action="{{ url_for('courses.delete_lesson', lesson_id=lesson.id) }}"
                                     style="display: inline;"
-                                    onsubmit="return confirm('⚠️ Are you sure you want to delete this lesson?\n\nLesson: {{ lesson.title }}\n\nThis action cannot be undone!');">
+                                    onsubmit="return confirm('⚠️ Are you sure you want to delete this lesson?\n\nLesson: {{ lesson.title }}\n\nThis will also delete:\n- All progress records\n{% if lesson.pdf_file %}\n- Attached PDF file{% endif %}\n\nThis action cannot be undone!');">
                                     <button type="submit" class="btn btn-sm btn-danger" title="Delete Lesson">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -179,7 +196,13 @@
         // Confirm before delete
         $('form[action*="delete"]').on('submit', function (e) {
             const lessonTitle = $(this).closest('.lesson-item').find('h5').text().trim();
-            return confirm(`Are you sure you want to delete "${lessonTitle}"?\n\nThis action cannot be undone!`);
+            const hasPDF = $(this).closest('.lesson-item').find('.fa-file-pdf').length > 0;
+            let message = `Are you sure you want to delete "${lessonTitle}"?\n\nThis will also delete all progress records.`;
+            if (hasPDF) {
+                message += '\n\nThis lesson has a PDF attachment that will also be deleted.';
+            }
+            message += '\n\nThis action cannot be undone!';
+            return confirm(message);
         });
     });
 </script>
